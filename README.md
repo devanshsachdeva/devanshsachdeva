@@ -65,7 +65,7 @@
 
 Total Lines Written: 50,000+ 🎯
 Active Projects: 12+ 🚀
-Commits This Year: 300+ 📈
+Commits This Year: 30+ 📈
 Languages: 6+ 🌍
 ```
 
