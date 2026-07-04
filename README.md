@@ -63,7 +63,7 @@
 ```
 ████████████████████░░░░░░░░░░░░░░░░░░░░  Lines of Code Written
 
-Total Lines Written: 50,000+ 🎯
+Total Lines Written: 500,000+ 🎯
 Active Projects: 12+ 🚀
 Commits This Year: 30+ 📈
 Languages: 6+ 🌍
