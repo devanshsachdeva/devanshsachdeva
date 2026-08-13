@@ -3,30 +3,44 @@
 A single-file progress tracker for the run at an Amazon **Data Analyst**, **Data Engineer**, or
 **BI Engineer** role.
 
-Fully offline. No build step, no server required, no network calls at any point — the fonts,
-styles and script are all inlined into the one file, so it works on a plane, behind a firewall,
-or on a machine that has never seen this repo. All progress is saved to the browser's local
-storage.
+Fully offline. The built `index.html` makes no network calls at any point and needs no server —
+the fonts, styles and script are all inlined into that one file, so it works on a plane, behind
+a firewall, or on a machine that has never seen this repo. Progress is saved to the browser's
+local storage.
 
-## Running it locally
+## Running it
 
-Either works:
+One command, from the folder holding `src/`:
 
 ```sh
-# 1. straight from the filesystem
-open users/devanxh/index.html          # macOS
-xdg-open users/devanxh/index.html      # Linux
-start users\devanxh\index.html         # Windows
-
-# 2. served over localhost
-python3 -m http.server 8000 --directory users/devanxh
-# then visit http://localhost:8000
+python3 src/run.py
 ```
 
-**Pick one and stick with it.** Local storage is keyed to the origin, and `file://` and
-`http://localhost:8000` are different origins — progress saved under one will not show up
-under the other. If you do need to switch, move your data across with **Data → Export JSON**
-and then **Paste JSON** on the other side.
+That builds the page if anything changed and opens it in your browser. Nothing to install —
+it uses only the Python standard library, and macOS and Linux already ship `python3`. If your
+path has a space in it, quote it: `cd "/Users/devanxh/Amazon Skill Tracker"`.
+
+Re-running when nothing has changed is a no-op — it fingerprints the sources and skips the
+rebuild, so the command is cheap enough to be the only one you ever type.
+
+```sh
+python3 src/run.py --serve      # serve on http://localhost:8000 instead
+python3 src/run.py --force      # rebuild even if nothing changed
+python3 src/run.py --no-open    # build only
+```
+
+You can also just double-click `index.html` — it is a complete, standalone page and needs
+neither Python nor a server.
+
+**The first run needs the network once, and only if `src/fonts/` is empty** — it fetches the
+four IBM Plex subsets, then never touches the network again. With no connection it builds
+anyway and falls back to your system fonts, so the command always produces a working page;
+it just isn't set in Plex. Drop the fonts in later and re-run to get them.
+
+**Pick file or localhost and stay there.** Local storage is keyed to the origin, and `file://`
+and `http://localhost:8000` are different origins — progress saved under one will not show up
+under the other. To switch, move your data with **Data → Export JSON** and **Paste JSON** on
+the other side.
 
 ## The code
 
@@ -37,13 +51,14 @@ it by hand. The readable source is:
 src/app.html          markup + the whole stylesheet (design tokens at the top)
 src/app.js            all behaviour: the roadmap content, state, and rendering
 src/fonts/            the four IBM Plex subsets, OFL 1.1 (see fonts/LICENSE.txt)
-src/build.py          inlines the above into index.html — no dependencies
+src/run.py            build-if-changed and open — the one command you need
+src/build.py          the inliner run.py calls; usable on its own
 ```
 
-Edit a source file, then rebuild:
+Edit a source file, then re-run:
 
 ```sh
-python3 src/build.py
+python3 src/run.py
 ```
 
 The build is deterministic: same inputs, byte-identical `index.html`.
