@@ -28,6 +28,39 @@ python3 -m http.server 8000 --directory users/devanxh
 under the other. If you do need to switch, move your data across with **Data → Export JSON**
 and then **Paste JSON** on the other side.
 
+## The code
+
+`index.html` is a build artifact — 206 KB with four woff2 subsets base64'd into it. Don't edit
+it by hand. The readable source is:
+
+```
+src/app.html          markup + the whole stylesheet (design tokens at the top)
+src/app.js            all behaviour: the roadmap content, state, and rendering
+src/fonts/            the four IBM Plex subsets, OFL 1.1 (see fonts/LICENSE.txt)
+src/build.py          inlines the above into index.html — no dependencies
+```
+
+Edit a source file, then rebuild:
+
+```sh
+python3 src/build.py
+```
+
+The build is deterministic: same inputs, byte-identical `index.html`.
+
+**Where to change things.** The plan itself is data at the top of `src/app.js` — `PHASES` holds
+the five phases and every task (`t` title, `d` detail, `h` estimated hours, `p` pillar, `r` the
+roles it applies to), `WEIGHTS` sets how much each pillar counts toward the score per role,
+`LPS` is the principle list, `ROUNDS` the loop stages and `STAGES` the pipeline stages. Adding a
+task is one line in the right phase array. Task IDs are positional (`p2-7` is the seventh task of
+phase 2), so **inserting a task mid-array renumbers the ones after it** and their saved progress
+shifts with the numbering — append to the end of a phase instead, or export your JSON first and
+fix the keys up by hand.
+
+Colour, type and spacing are CSS custom properties in the `:root` block of `src/app.html`, with
+the dark palette repeated in the two blocks below it — change a token in all three places and it
+propagates everywhere.
+
 ## What it tracks
 
 | Section | What it holds |

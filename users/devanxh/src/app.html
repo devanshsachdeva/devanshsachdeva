@@ -1,0 +1,659 @@
+<title>Amazon Loop Readiness</title>
+<style>
+@font-face{font-family:"Plex Sans";src:url(data:font/woff2;base64,__SANSVAR__) format("woff2");font-weight:100 700;font-style:normal;font-display:swap}
+@font-face{font-family:"Plex Cond";src:url(data:font/woff2;base64,__COND600__) format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"Plex Mono";src:url(data:font/woff2;base64,__MONO400__) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Plex Mono";src:url(data:font/woff2;base64,__MONO600__) format("woff2");font-weight:600;font-style:normal;font-display:swap}
+
+:root{
+  color-scheme:light;
+  --plane:#eaedf1;
+  --surface:#ffffff;
+  --surface-2:#f4f6f9;
+  --sunken:#e2e6ec;
+  --ink:#131a22;
+  --ink-2:#4c5665;
+  --ink-3:#7b8593;
+  --rule:#d5dbe3;
+  --rule-strong:#bcc5d0;
+  --accent:#a35c00;
+  --accent-bright:#c47100;
+  --accent-wash:#f7ecdb;
+  --accent-rule:#e5cfae;
+  --good:#0a7a0a;
+  --good-mark:#0ca30c;
+  --good-wash:#e4f4e4;
+  --crit:#c22f2f;
+  --crit-wash:#fae7e7;
+  --info:#1f5fae;
+  --info-wash:#e6eefa;
+  --ramp-0:#e9ecf1;
+  --ramp-1:#f2ddbd;
+  --ramp-2:#e5bd7f;
+  --ramp-3:#d19a3f;
+  --ramp-4:#a35c00;
+  --shadow:0 1px 2px rgba(19,26,34,.06),0 8px 24px -12px rgba(19,26,34,.22);
+  --font-display:"Plex Cond","Arial Narrow",system-ui,sans-serif;
+  --font-body:"Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --plane:#0c1116;
+    --surface:#151c24;
+    --surface-2:#1b232c;
+    --sunken:#101820;
+    --ink:#f0f3f6;
+    --ink-2:#a7b2be;
+    --ink-3:#78838f;
+    --rule:#28323d;
+    --rule-strong:#3a4652;
+    --accent:#ffa724;
+    --accent-bright:#ffb84d;
+    --accent-wash:#2a2010;
+    --accent-rule:#4d3c18;
+    --good:#31c331;
+    --good-mark:#0ca30c;
+    --good-wash:#12280f;
+    --crit:#f07a7a;
+    --crit-wash:#2e1414;
+    --info:#6ba4ec;
+    --info-wash:#132135;
+    --ramp-0:#1b232c;
+    --ramp-1:#3d2f14;
+    --ramp-2:#6b4d13;
+    --ramp-3:#b0740d;
+    --ramp-4:#ffa724;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --plane:#0c1116;
+  --surface:#151c24;
+  --surface-2:#1b232c;
+  --sunken:#101820;
+  --ink:#f0f3f6;
+  --ink-2:#a7b2be;
+  --ink-3:#78838f;
+  --rule:#28323d;
+  --rule-strong:#3a4652;
+  --accent:#ffa724;
+  --accent-bright:#ffb84d;
+  --accent-wash:#2a2010;
+  --accent-rule:#4d3c18;
+  --good:#31c331;
+  --good-mark:#0ca30c;
+  --good-wash:#12280f;
+  --crit:#f07a7a;
+  --crit-wash:#2e1414;
+  --info:#6ba4ec;
+  --info-wash:#132135;
+  --ramp-0:#1b232c;
+  --ramp-1:#3d2f14;
+  --ramp-2:#6b4d13;
+  --ramp-3:#b0740d;
+  --ramp-4:#ffa724;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.8);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--plane);color:var(--ink);
+  font-family:var(--font-body);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4,p,figure,ul,ol{margin:0}
+ul,ol{padding:0;list-style:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
+:focus-visible{outline:2px solid var(--accent-bright);outline-offset:2px;border-radius:3px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.eyebrow{
+  font-family:var(--font-mono);font-size:11px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- shell ---------- */
+.shell{max-width:1240px;margin:0 auto;padding:0 20px 96px}
+.masthead{
+  display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;
+  padding:26px 0 18px;border-bottom:2px solid var(--ink);
+}
+.brand{display:flex;flex-direction:column;gap:4px;min-width:0}
+.brand h1{
+  font-family:var(--font-display);font-weight:600;font-size:clamp(26px,4.4vw,40px);
+  line-height:1.02;letter-spacing:-.005em;text-wrap:balance;
+}
+.brand .sub{font-size:13px;color:var(--ink-2);max-width:52ch}
+.masthead-ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.field{display:flex;flex-direction:column;gap:3px}
+.field > span{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+select,input[type=text],input[type=date],input[type=number],textarea{
+  background:var(--surface);border:1px solid var(--rule-strong);border-radius:4px;
+  padding:6px 8px;font-size:13px;color:var(--ink);min-width:0;
+}
+textarea{resize:vertical;line-height:1.55;width:100%}
+input[type=date]{font-family:var(--font-mono);font-size:12px}
+.btn{
+  border:1px solid var(--rule-strong);border-radius:4px;background:var(--surface);
+  padding:6px 11px;font-size:12.5px;font-weight:500;color:var(--ink-2);
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.btn:hover{border-color:var(--ink-3);color:var(--ink)}
+.btn-primary{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.btn-primary:hover{background:var(--ink-2);border-color:var(--ink-2);color:var(--surface)}
+.btn-sm{padding:3px 8px;font-size:11.5px}
+
+/* ---------- nav ---------- */
+.tabs{
+  display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--rule);
+  position:sticky;top:0;z-index:20;background:var(--plane);
+  scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);padding:12px 14px;white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab .cnt{color:var(--ink-3);font-weight:400;margin-left:5px}
+
+.panel{padding-top:26px}
+.panel[hidden]{display:none}
+.stack{display:flex;flex-direction:column;gap:26px}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  box-shadow:var(--shadow);
+}
+.card-hd{
+  display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:14px 18px;border-bottom:1px solid var(--rule);
+}
+.card-hd h2,.card-hd h3{font-family:var(--font-display);font-weight:600;font-size:19px;letter-spacing:-.003em}
+.card-bd{padding:18px}
+.card-bd.tight{padding:0}
+.note{font-size:12.5px;color:var(--ink-3);line-height:1.5}
+
+/* ---------- hero readiness ---------- */
+.hero{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:0;
+  background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.hero-main{padding:22px;display:flex;flex-direction:column;gap:14px;border-right:1px solid var(--rule)}
+.figure-row{display:flex;align-items:baseline;gap:12px}
+.figure{
+  font-family:var(--font-display);font-weight:600;font-size:clamp(52px,9vw,76px);
+  line-height:.86;letter-spacing:-.02em;
+}
+.figure .pct{font-size:.42em;color:var(--ink-3);margin-left:2px}
+.figure-side{display:flex;flex-direction:column;gap:2px;padding-bottom:4px}
+.rail{position:relative;height:12px;background:var(--sunken);border-radius:6px;overflow:hidden}
+.rail-fill{display:block;height:100%;background:var(--accent);border-radius:6px;transition:width .35s ease}
+.rail-mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink-2);border-radius:1px}
+.rail-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-3)}
+.rail-legend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:10px;height:10px;border-radius:2px;background:var(--accent);flex:none}
+.swatch.line{width:2px;height:12px;border-radius:1px;background:var(--ink-2)}
+.verdict{
+  display:inline-flex;align-items:center;gap:7px;align-self:flex-start;
+  font-size:12.5px;font-weight:500;padding:4px 10px;border-radius:4px;border:1px solid;
+}
+.v-good{color:var(--good);background:var(--good-wash);border-color:color-mix(in srgb,var(--good) 30%,transparent)}
+.v-warn{color:var(--accent);background:var(--accent-wash);border-color:var(--accent-rule)}
+.v-crit{color:var(--crit);background:var(--crit-wash);border-color:color-mix(in srgb,var(--crit) 30%,transparent)}
+
+.hero-side{display:grid;grid-template-columns:repeat(3,1fr)}
+.tile{padding:16px 16px 14px;border-bottom:1px solid var(--rule);border-right:1px solid var(--rule);display:flex;flex-direction:column;gap:3px}
+.hero-side .tile:nth-child(3n){border-right:0}
+.hero-side .tile:nth-last-child(-n+3){border-bottom:0}
+.tile-k{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.tile-v{font-family:var(--font-display);font-weight:600;font-size:27px;line-height:1.05;letter-spacing:-.01em}
+.tile-v small{font-size:13px;color:var(--ink-3);font-weight:400;font-family:var(--font-body);margin-left:5px}
+.tile-s{font-size:11.5px;color:var(--ink-3)}
+
+/* ---------- pillar chart ---------- */
+.bars{display:flex;flex-direction:column;gap:3px}
+.bar-row{
+  display:grid;grid-template-columns:190px minmax(0,1fr) 52px;gap:14px;align-items:center;
+  padding:7px 6px;border-radius:4px;
+}
+.bar-row:hover{background:var(--surface-2)}
+.bar-name{font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:8px;min-width:0}
+.bar-name b{font-family:var(--font-mono);font-size:10.5px;font-weight:400;color:var(--ink-3);flex:none}
+.bar-track{position:relative;height:14px;background:var(--sunken);border-radius:3px}
+.bar-fill{display:block;height:100%;background:var(--accent);border-radius:0 4px 4px 0;transition:width .35s ease}
+.bar-fill[data-zero="1"]{border-radius:0}
+.bar-tick{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink-2);border-radius:1px}
+.bar-val{font-family:var(--font-mono);font-size:12.5px;font-variant-numeric:tabular-nums;text-align:right;color:var(--ink-2)}
+.bar-row[data-weak="1"] .bar-val{color:var(--crit);font-weight:600}
+
+/* ---------- phases + tasks ---------- */
+.phase{border:1px solid var(--rule);border-radius:6px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.phase-hd{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;
+  width:100%;text-align:left;padding:14px 18px;
+}
+.phase-hd:hover{background:var(--surface-2)}
+.phase-no{
+  font-family:var(--font-display);font-weight:600;font-size:30px;line-height:1;
+  color:var(--ink-3);width:44px;letter-spacing:-.02em;
+}
+.phase[data-done="1"] .phase-no{color:var(--good)}
+.phase-t{display:flex;flex-direction:column;gap:3px;min-width:0}
+.phase-t h3{font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:-.004em}
+.phase-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-3)}
+.phase-pg{display:flex;align-items:center;gap:12px}
+.mini-track{width:104px;height:8px;background:var(--sunken);border-radius:4px;overflow:hidden}
+.mini-fill{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .3s ease}
+.phase[data-done="1"] .mini-fill{background:var(--good-mark)}
+.chev{color:var(--ink-3);transition:transform .2s ease;flex:none}
+.phase[data-open="1"] .chev{transform:rotate(90deg)}
+.phase-bd{border-top:1px solid var(--rule)}
+.phase[data-open="0"] .phase-bd{display:none}
+
+.task{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:start;
+  padding:12px 18px;border-bottom:1px solid var(--rule);
+}
+.task:last-child{border-bottom:0}
+.task:hover{background:var(--surface-2)}
+.task[data-st="done"] .task-t{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--rule-strong)}
+.task[data-off="1"]{opacity:.5}
+.box{
+  width:19px;height:19px;border:1.5px solid var(--rule-strong);border-radius:4px;flex:none;
+  display:grid;place-items:center;margin-top:2px;color:transparent;background:var(--surface);
+}
+.box:hover{border-color:var(--accent)}
+.task[data-st="doing"] .box{border-color:var(--accent);background:var(--accent-wash);color:var(--accent)}
+.task[data-st="done"] .box{border-color:var(--good-mark);background:var(--good-mark);color:#fff}
+.task-body{display:flex;flex-direction:column;gap:4px;min-width:0}
+.task-t{font-size:14px;font-weight:500;line-height:1.35}
+.task-d{font-size:12.5px;color:var(--ink-2);line-height:1.5;max-width:78ch}
+.task-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
+.chip{
+  font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 6px;border-radius:3px;border:1px solid var(--rule-strong);color:var(--ink-3);white-space:nowrap;
+}
+.chip-pillar{border-color:var(--accent-rule);color:var(--accent);background:var(--accent-wash)}
+.chip-off{border-style:dashed}
+.task-r{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
+.hrs{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.st-label{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.task[data-st="todo"] .st-label{color:var(--ink-3)}
+.task[data-st="doing"] .st-label{color:var(--accent)}
+.task[data-st="done"] .st-label{color:var(--good)}
+
+/* ---------- LP board ---------- */
+.lp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:1px;background:var(--rule)}
+.lp{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:9px}
+.lp-hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.lp-hd h4{font-size:14px;font-weight:600;line-height:1.25;text-wrap:balance}
+.lp-no{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);flex:none}
+.lp-state{display:flex;gap:5px}
+.seg{
+  font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 7px;border:1px solid var(--rule-strong);border-radius:3px;color:var(--ink-3);
+}
+.seg[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.lp[data-s="none"] .seg[aria-pressed="true"]{background:var(--surface-2);border-color:var(--ink-3);color:var(--ink-2)}
+.lp[data-s="rehearsed"] .seg[aria-pressed="true"]{background:var(--good-mark);border-color:var(--good-mark);color:#fff}
+.lp[data-s="drafted"] .seg[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+:root[data-theme="dark"] .lp[data-s="drafted"] .seg[aria-pressed="true"]{color:#1a1204}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lp[data-s="drafted"] .seg[aria-pressed="true"]{color:#1a1204}}
+.lp input[type=text]{width:100%;font-size:13px}
+.lp textarea{font-size:12.5px;min-height:118px;font-family:var(--font-body)}
+.lp-toggle{font-size:11.5px;color:var(--ink-3);align-self:flex-start;text-decoration:underline;text-underline-offset:2px}
+.lp-toggle:hover{color:var(--accent)}
+.lp[data-low="1"] .lp-hd h4{color:var(--ink-2)}
+
+/* ---------- loop rounds ---------- */
+.round{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--rule)}
+.round:last-child{border-bottom:0}
+.round-t{display:flex;flex-direction:column;gap:3px}
+.round-t h4{font-size:14px;font-weight:600}
+.round-t p{font-size:12.5px;color:var(--ink-2);max-width:74ch}
+.dots{display:flex;gap:4px;align-items:center}
+.dot{width:22px;height:22px;border:1.5px solid var(--rule-strong);border-radius:4px;font-family:var(--font-mono);font-size:11px;color:var(--ink-3);display:grid;place-items:center}
+.dot:hover{border-color:var(--accent)}
+.dot[data-on="1"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+:root[data-theme="dark"] .dot[data-on="1"]{color:#1a1204}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dot[data-on="1"]{color:#1a1204}}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th{
+  font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule-strong);white-space:nowrap;
+}
+td{padding:9px 14px;border-bottom:1px solid var(--rule);font-size:13.5px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+td.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink-2)}
+.stage{font-family:var(--font-mono);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:3px;border:1px solid var(--rule-strong);color:var(--ink-2)}
+.stage[data-s="Offer"]{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,transparent);background:var(--good-wash)}
+.stage[data-s="Rejected"]{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 35%,transparent);background:var(--crit-wash)}
+.stage[data-s="Loop"],.stage[data-s="Phone screen"]{color:var(--accent);border-color:var(--accent-rule);background:var(--accent-wash)}
+.x{color:var(--ink-3);font-size:15px;line-height:1;padding:2px 6px;border-radius:3px}
+.x:hover{color:var(--crit);background:var(--crit-wash)}
+.addrow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:14px 18px;border-top:1px solid var(--rule);background:var(--surface-2)}
+.addrow .field{flex:1 1 130px}
+.empty{padding:26px 18px;text-align:center;color:var(--ink-3);font-size:13px}
+
+/* ---------- heatmap ---------- */
+.heat{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding-bottom:4px}
+.heat-days{display:flex;flex-direction:column;gap:3px;padding-top:17px;flex:none}
+.heat-days span{height:13px;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-3);line-height:13px}
+.heat-cols{display:flex;gap:3px;flex:none}
+.heat-col{display:flex;flex-direction:column;gap:3px}
+.heat-mth{height:14px;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-3);white-space:nowrap}
+.cell{width:13px;height:13px;border-radius:2.5px;background:var(--ramp-0);border:0;padding:0;display:block}
+.cell[data-l="1"]{background:var(--ramp-1)}
+.cell[data-l="2"]{background:var(--ramp-2)}
+.cell[data-l="3"]{background:var(--ramp-3)}
+.cell[data-l="4"]{background:var(--ramp-4)}
+.cell[data-void="1"]{background:transparent;cursor:default}
+.cell:hover:not([data-void="1"]){outline:1.5px solid var(--ink);outline-offset:1px}
+.heat-key{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-3);margin-top:12px}
+.heat-key i{width:13px;height:13px;border-radius:2.5px;display:block}
+
+/* ---------- misc ---------- */
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:26px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--rule);font-size:13.5px}
+.kv:last-child{border-bottom:0}
+.kv dt{color:var(--ink-2)}
+.kv dd{margin:0;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600}
+.banner{
+  display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-radius:5px;
+  background:var(--crit-wash);border:1px solid color-mix(in srgb,var(--crit) 30%,transparent);
+  color:var(--crit);font-size:12.5px;margin-top:16px;
+}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px}
+.spacer{flex:1 1 auto}
+.tip{
+  position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--plane);
+  padding:6px 9px;border-radius:4px;font-size:11.5px;line-height:1.4;box-shadow:var(--shadow);
+  max-width:230px;opacity:0;transition:opacity .12s ease;
+}
+.tip[data-on="1"]{opacity:1}
+.tip b{font-family:var(--font-mono);font-weight:600}
+footer.foot{margin-top:34px;padding-top:16px;border-top:1px solid var(--rule);font-size:12px;color:var(--ink-3);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr}
+  .hero-main{border-right:0;border-bottom:1px solid var(--rule)}
+  .bar-row{grid-template-columns:150px minmax(0,1fr) 46px;gap:10px}
+  .phase-hd{grid-template-columns:auto minmax(0,1fr);row-gap:10px}
+  .phase-pg{grid-column:1/-1;justify-content:space-between}
+  .mini-track{flex:1 1 auto;width:auto}
+}
+@media (max-width:560px){
+  .hero-side{grid-template-columns:repeat(2,1fr)}
+  .hero-side .tile:nth-child(3n){border-right:1px solid var(--rule)}
+  .hero-side .tile:nth-child(2n){border-right:0}
+  .bar-row{grid-template-columns:110px minmax(0,1fr) 42px}
+  .bar-name b{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+
+<div class="shell">
+  <header class="masthead">
+    <div class="brand">
+      <p class="eyebrow" id="eyebrow">Loop readiness · tracking since —</p>
+      <h1>Amazon Loop Readiness</h1>
+      <p class="sub">A working file for the run at a Data Analyst, Data Engineer, or BI Engineer seat — the syllabus, the stories, the loop, and the pipeline in one place. Everything you type is saved in this browser.</p>
+    </div>
+    <div class="masthead-ctl">
+      <label class="field"><span>Target role</span>
+        <select id="roleSel">
+          <option value="DA">Data Analyst</option>
+          <option value="DE">Data Engineer</option>
+          <option value="BIE">BI Engineer</option>
+        </select>
+      </label>
+      <label class="field"><span>Start</span><input type="date" id="startDate"></label>
+      <label class="field"><span>Loop target</span><input type="date" id="targetDate"></label>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-dash" aria-controls="p-dash" aria-selected="true">Dashboard</button>
+    <button class="tab" role="tab" id="tab-road" aria-controls="p-road" aria-selected="false">Roadmap<span class="cnt mono" id="cnt-road"></span></button>
+    <button class="tab" role="tab" id="tab-lp" aria-controls="p-lp" aria-selected="false">Stories<span class="cnt mono" id="cnt-lp"></span></button>
+    <button class="tab" role="tab" id="tab-loop" aria-controls="p-loop" aria-selected="false">The loop</button>
+    <button class="tab" role="tab" id="tab-apps" aria-controls="p-apps" aria-selected="false">Pipeline<span class="cnt mono" id="cnt-apps"></span></button>
+    <button class="tab" role="tab" id="tab-log" aria-controls="p-log" aria-selected="false">Study log</button>
+    <button class="tab" role="tab" id="tab-data" aria-controls="p-data" aria-selected="false">Data</button>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <section class="panel" id="p-dash" role="tabpanel" aria-labelledby="tab-dash">
+    <div class="stack">
+      <div class="hero">
+        <div class="hero-main">
+          <p class="eyebrow">Weighted readiness · <span id="heroRole">Data Analyst</span></p>
+          <div class="figure-row">
+            <div class="figure mono" id="readyFig">0<span class="pct">%</span></div>
+            <div class="figure-side">
+              <div class="verdict v-warn" id="verdict">Getting started</div>
+              <p class="note" id="paceNote">Set a start and target date to see pace.</p>
+            </div>
+          </div>
+          <div class="rail" id="railWrap">
+            <div class="rail-fill" id="railFill" style="width:0%"></div>
+            <div class="rail-mark" id="railMark" hidden></div>
+          </div>
+          <div class="rail-legend">
+            <span><i class="swatch"></i>Readiness now</span>
+            <span><i class="swatch line"></i>Where the plan says you should be</span>
+          </div>
+          <p class="note">Readiness is the weighted average of the eight skill pillars below, weighted for the role you picked. Half credit for anything in progress.</p>
+        </div>
+        <div class="hero-side" id="tiles"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <h2>Readiness by pillar</h2>
+          <p class="note">Weights shift with the target role · the tick marks plan pace</p>
+        </div>
+        <div class="card-bd">
+          <div class="bars" id="pillarBars"></div>
+          <p class="note" style="margin-top:14px">Bars are the share of that pillar's scheduled hours you have finished. Leadership Principles blends task progress with how many of the 16 stories are written and rehearsed. A figure in red is more than 20 points behind plan pace.</p>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="card">
+          <div class="card-hd"><h3>Next up</h3><p class="note">Earliest unfinished work in your track</p></div>
+          <div class="card-bd tight"><ul id="nextUp"></ul></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><h3>By the numbers</h3></div>
+          <div class="card-bd"><dl id="numbers"></dl></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section class="panel" id="p-road" role="tabpanel" aria-labelledby="tab-road" hidden>
+    <div class="filters">
+      <label class="field"><span>Show</span>
+        <select id="scopeSel">
+          <option value="track">Only my track</option>
+          <option value="all">Everything</option>
+        </select>
+      </label>
+      <label class="field"><span>Status</span>
+        <select id="statusSel">
+          <option value="all">All</option>
+          <option value="open">Unfinished</option>
+          <option value="doing">In progress</option>
+          <option value="done">Done</option>
+        </select>
+      </label>
+      <label class="field"><span>Pillar</span><select id="pillarSel"></select></label>
+      <div class="spacer"></div>
+      <div class="toolbar">
+        <button class="btn btn-sm" id="expandAll">Open all</button>
+        <button class="btn btn-sm" id="collapseAll">Close all</button>
+      </div>
+    </div>
+    <div class="stack" id="phases"></div>
+  </section>
+
+  <!-- STORIES -->
+  <section class="panel" id="p-lp" role="tabpanel" aria-labelledby="tab-lp" hidden>
+    <div class="stack">
+      <div class="card">
+        <div class="card-hd">
+          <h2>Leadership Principle stories</h2>
+          <p class="note" id="lpSummary"></p>
+        </div>
+        <div class="card-bd">
+          <p class="note" style="max-width:80ch">Every round in the loop carries two behavioural questions, and the Bar Raiser will push three levels deeper than you expect. Write one real story per principle in STAR form — situation, task, action, result, and what you would do differently. Keep the setup under thirty seconds, own the "I" not the "we", and land on a number. Two principles are marked lower priority: they come up rarely at entry and mid level, so write them last.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-bd tight"><div class="lp-grid" id="lpGrid"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOOP -->
+  <section class="panel" id="p-loop" role="tabpanel" aria-labelledby="tab-loop" hidden>
+    <div class="stack">
+      <div class="card">
+        <div class="card-hd">
+          <h2>The loop, stage by stage</h2>
+          <p class="note">Rate your confidence 1–5 after each mock</p>
+        </div>
+        <div class="card-bd tight" id="rounds"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>How the hiring bar works</h3></div>
+        <div class="card-bd">
+          <p class="note" style="max-width:80ch;font-size:13.5px;color:var(--ink-2)">Interviewers are each assigned a slice of the principles and write up notes against them before debriefing together. The Bar Raiser is from outside the hiring team, has veto power, and is asking one question: are you better than the median person already in this role. That is why a technically correct SQL answer with a thin story still fails, and why every answer wants a metric attached to it. Assume the loop is five to six rounds, that you will be asked to write SQL live, and that at least one round is a design conversation with no single right answer.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIPELINE -->
+  <section class="panel" id="p-apps" role="tabpanel" aria-labelledby="tab-apps" hidden>
+    <div class="card">
+      <div class="card-hd">
+        <h2>Application pipeline</h2>
+        <p class="note">Amazon teams hire independently — several open requisitions at once is normal</p>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Team / company</th><th>Role</th><th>Stage</th><th>Last touch</th><th>Notes</th><th><span class="sr">Remove</span></th></tr></thead>
+          <tbody id="appRows"></tbody>
+        </table>
+      </div>
+      <div id="appEmpty" class="empty">Nothing tracked yet. Add the first requisition below.</div>
+      <div class="addrow">
+        <label class="field"><span>Team / company</span><input type="text" id="aTeam" placeholder="AWS Billing Analytics"></label>
+        <label class="field"><span>Role</span><input type="text" id="aRole" placeholder="Data Engineer I"></label>
+        <label class="field"><span>Stage</span><select id="aStage"></select></label>
+        <label class="field"><span>Last touch</span><input type="date" id="aDate"></label>
+        <label class="field" style="flex:2 1 200px"><span>Notes</span><input type="text" id="aNote" placeholder="Referral from …"></label>
+        <button class="btn btn-primary" id="addApp">Add</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STUDY LOG -->
+  <section class="panel" id="p-log" role="tabpanel" aria-labelledby="tab-log" hidden>
+    <div class="stack">
+      <div class="card">
+        <div class="card-hd">
+          <h2>Study log</h2>
+          <p class="note" id="logSummary"></p>
+        </div>
+        <div class="card-bd">
+          <div class="heat" id="heat"></div>
+          <div class="heat-key">
+            <span>Lighter</span>
+            <i style="background:var(--ramp-0)"></i><i style="background:var(--ramp-1)"></i>
+            <i style="background:var(--ramp-2)"></i><i style="background:var(--ramp-3)"></i>
+            <i style="background:var(--ramp-4)"></i>
+            <span>Heavier · click a day to log it</span>
+          </div>
+        </div>
+        <div class="addrow">
+          <label class="field"><span>Date</span><input type="date" id="lDate"></label>
+          <label class="field" style="max-width:110px"><span>Hours</span><input type="number" id="lHours" min="0" max="16" step="0.5" value="2"></label>
+          <label class="field" style="flex:2 1 240px"><span>What you did</span><input type="text" id="lNote" placeholder="Window functions — 12 problems"></label>
+          <button class="btn btn-primary" id="addLog">Log</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>Recent sessions</h3></div>
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Date</th><th>Hours</th><th>What you did</th><th><span class="sr">Remove</span></th></tr></thead>
+          <tbody id="logRows"></tbody></table>
+        </div>
+        <div id="logEmpty" class="empty">No sessions logged yet.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA -->
+  <section class="panel" id="p-data" role="tabpanel" aria-labelledby="tab-data" hidden>
+    <div class="split">
+      <div class="card">
+        <div class="card-hd"><h3>Your data</h3></div>
+        <div class="card-bd">
+          <p class="note" style="margin-bottom:14px">Everything lives in this browser's local storage under one key — nothing is sent anywhere. Export before you switch machines or clear your browser.</p>
+          <div class="toolbar">
+            <button class="btn btn-primary" id="expBtn">Export JSON</button>
+            <button class="btn" id="impBtn">Import from file</button>
+            <input type="file" id="impFile" accept="application/json,.json" hidden>
+            <button class="btn" id="pasteBtn">Paste JSON</button>
+            <button class="btn" id="resetBtn">Reset everything</button>
+          </div>
+          <div id="pasteWrap" hidden style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+            <textarea id="pasteBox" rows="6" placeholder="Paste the contents of an exported JSON file here"></textarea>
+            <button class="btn btn-primary btn-sm" id="pasteLoad" style="align-self:flex-start">Load it</button>
+          </div>
+          <p class="note" id="expNote" style="margin-top:10px"></p>
+          <div class="banner" id="storeWarn" hidden>
+            <span aria-hidden="true">!</span>
+            <span>This browser is blocking local storage, so changes will be lost when the page closes. Export your JSON before you leave.</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>Scope of the plan</h3></div>
+        <div class="card-bd"><dl id="scopeStats"></dl></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>Progress saved locally · last change <span class="mono" id="savedAt">—</span></span>
+    <span class="mono">DA · DE · BIE</span>
+  </footer>
+</div>
+<div class="tip" id="tip" role="status"></div>
+<script>
+__APP_JS__
+</script>
