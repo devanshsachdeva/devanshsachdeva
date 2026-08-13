@@ -32,7 +32,28 @@ HEAD = (
 )
 
 
+FONT_HELP = """Missing {n} font file(s) under {dir}:
+
+{names}
+
+The build inlines these, so it cannot run without them. Either copy the
+fonts/ directory from users/devanxh/src/ in the repo, or skip the build
+entirely and open the prebuilt index.html — it already has them baked in."""
+
+
+def check(src: pathlib.Path) -> None:
+    for name in ("app.html", "app.js"):
+        if not (src / name).is_file():
+            raise SystemExit(f"Missing {src / name} — the build needs it.")
+    missing = [f for f in FONTS.values() if not (src / "fonts" / f).is_file()]
+    if missing:
+        raise SystemExit(FONT_HELP.format(
+            n=len(missing), dir=src / "fonts",
+            names="\n".join("  " + m for m in missing)))
+
+
 def build(src: pathlib.Path) -> str:
+    check(src)
     page = (src / "app.html").read_text(encoding="utf-8")
     for token, filename in FONTS.items():
         blob = (src / "fonts" / filename).read_bytes()
