@@ -633,10 +633,16 @@ footer.foot{margin-top:34px;padding-top:16px;border-top:1px solid var(--rule);fo
           <p class="note" style="margin-bottom:14px">Everything lives in this browser's local storage under one key — nothing is sent anywhere. Export before you switch machines or clear your browser.</p>
           <div class="toolbar">
             <button class="btn btn-primary" id="expBtn">Export JSON</button>
-            <button class="btn" id="impBtn">Import JSON</button>
+            <button class="btn" id="impBtn">Import from file</button>
             <input type="file" id="impFile" accept="application/json,.json" hidden>
+            <button class="btn" id="pasteBtn">Paste JSON</button>
             <button class="btn" id="resetBtn">Reset everything</button>
           </div>
+          <div id="pasteWrap" hidden style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+            <textarea id="pasteBox" rows="6" placeholder="Paste the contents of an exported JSON file here"></textarea>
+            <button class="btn btn-primary btn-sm" id="pasteLoad" style="align-self:flex-start">Load it</button>
+          </div>
+          <p class="note" id="expNote" style="margin-top:10px"></p>
           <div class="banner" id="storeWarn" hidden>
             <span aria-hidden="true">!</span>
             <span>This browser is blocking local storage, so changes will be lost when the page closes. Export your JSON before you leave.</span>
@@ -1388,29 +1394,65 @@ footer.foot{margin-top:34px;padding-top:16px;border-top:1px solid var(--rule);fo
       touch();
     });
 
+    function say(msg) { $("expNote").textContent = msg; }
+
+    function applyImport(text) {
+      var o;
+      try { o = JSON.parse(text); }
+      catch (err) { say("That is not a readiness export — the JSON could not be read."); return; }
+      if (!o || typeof o !== "object") { say("That JSON does not look like a readiness export."); return; }
+      var base = defaults();
+      for (var k in base) if (o[k] !== undefined && o[k] !== null) base[k] = o[k];
+      S = base;
+      $("roleSel").value = S.role; $("startDate").value = S.start; $("targetDate").value = S.target;
+      touch();
+      say("Imported. Everything below is now from that file.");
+    }
+
     $("expBtn").addEventListener("click", function () {
-      var blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
+      var name = "amazon-loop-readiness-" + today() + ".json";
+      var json = JSON.stringify(S, null, 2);
+      // Inside the Artifact viewer a page can only hand over a file through
+      // the downloads capability; from the filesystem an anchor is enough.
+      if (window.claude && window.claude.downloads) {
+        say("Waiting for you to confirm the download…");
+        window.claude.downloads.save({ filename: name, data: json }).then(function () {
+          say("Saved as " + name + ".");
+        }, function (err) {
+          say(err && err.code === "declined"
+            ? "Download cancelled — nothing was saved."
+            : "The download could not be handed over. Use Paste JSON on the other browser instead.");
+        });
+        return;
+      }
+      var blob = new Blob([json], { type: "application/json" });
       var url = URL.createObjectURL(blob), a = document.createElement("a");
-      a.href = url; a.download = "amazon-loop-readiness-" + today() + ".json";
+      a.href = url; a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      say("Saved as " + name + ".");
     });
+
     $("impBtn").addEventListener("click", function () { $("impFile").click(); });
     $("impFile").addEventListener("change", function () {
       var f = this.files && this.files[0];
       if (!f) return;
       var fr = new FileReader();
-      fr.onload = function () {
-        try {
-          var o = JSON.parse(fr.result), base = defaults();
-          for (var k in base) if (o[k] !== undefined && o[k] !== null) base[k] = o[k];
-          S = base;
-          $("roleSel").value = S.role; $("startDate").value = S.start; $("targetDate").value = S.target;
-          touch();
-        } catch (err) { window.alert("That file is not a readiness export — the JSON could not be read."); }
-      };
+      fr.onload = function () { applyImport(fr.result); };
       fr.readAsText(f);
       this.value = "";
+    });
+    $("pasteBtn").addEventListener("click", function () {
+      var w = $("pasteWrap");
+      w.hidden = !w.hidden;
+      if (!w.hidden) $("pasteBox").focus();
+    });
+    $("pasteLoad").addEventListener("click", function () {
+      var t = $("pasteBox").value.trim();
+      if (!t) { $("pasteBox").focus(); return; }
+      applyImport(t);
+      $("pasteBox").value = "";
+      $("pasteWrap").hidden = true;
     });
     $("resetBtn").addEventListener("click", function () {
       if (!window.confirm("Clear every task, story, application and log entry? Export first if you want a copy.")) return;
